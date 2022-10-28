@@ -9,9 +9,11 @@
 ## enter a file to save the key as demand and no passphrase
 ## Testing your SSH connection
  `ssh -T git@github.com`
+ 
+ or `ssh -T git@gitlab.com`
 
-# with multiple account
-
+## with multiple account
+`
 edit config 
 `
 # Personal GitHub account
