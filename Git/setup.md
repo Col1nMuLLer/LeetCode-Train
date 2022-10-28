@@ -17,7 +17,7 @@
 edit config 
 `
 
-`
+```
 # Personal GitHub account
 Host github.com
  Hostname ssh.github.com
@@ -29,7 +29,8 @@ Host gitlab.com
  HostName git.tu-berlin.de
  PreferredAuthentications publickey
  IdentityFile ~/.ssh/tu-berlin_rsa
- `
+```
+
 # Useful link
 1. 多个账户配置ssh [here][1]
 2.  [GitHub][2]
