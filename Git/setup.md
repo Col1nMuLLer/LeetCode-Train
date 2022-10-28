@@ -1,4 +1,4 @@
-# Set-up git with SSH
+# 1. Set-up git with SSH
 ## Check the existing ssh key
 ### Lists the files in your .ssh directory, if they exist
   `ls -al ~/.ssh`
@@ -40,4 +40,5 @@ Host gitlab.com
 [2]: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/about-ssh
 [3]: https://docs.gitlab.com/ee/user/ssh.html
 
+# 2. 提交代码 
  
