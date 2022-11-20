@@ -4,3 +4,5 @@
 
 ### instance roles demo
 ' -'
+### AMI
+  用别人创建配置好的image来作为我们的机器
