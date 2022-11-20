@@ -35,10 +35,11 @@ Host gitlab.com
 1. 多个账户配置ssh [here][1]
 2.  [GitHub][2]
 3.  [GitLab][3]
+4.  http://chengshiwen.com/article/head-first-git
 
 [1]: https://www.jianshu.com/p/756dc956f693
 [2]: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/about-ssh
 [3]: https://docs.gitlab.com/ee/user/ssh.html
 
-# 2. 提交代码 
+# 2. Clean code
  
