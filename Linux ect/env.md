@@ -18,3 +18,5 @@ https://stackoverflow.com/questions/69797806/code-style-issues-found-in-the-abov
  
  https://stackoverflow.com/questions/58395566/lsb-release-command-not-found-in-latest-ubuntu-docker-container
  apt-get update && apt-get install -y lsb-release && apt-get clean all
+
+https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/
