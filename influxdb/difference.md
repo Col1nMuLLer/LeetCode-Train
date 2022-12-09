@@ -24,7 +24,7 @@ Design principles: Inspired by Javascript, the aim is to design languages that a
 ## 4. Comparication
 
 ### 4.1 A key overview
-A **key** sum up about the difference. 
+A **key** sum-up of the differences:
 
 #### 4.1.1 UI
 - Influx 1.8 doesn't support UI. We have to configure ourselves. While, influx 2.5 supports UI, and intergrade as a whole project.
