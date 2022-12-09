@@ -26,14 +26,16 @@ Design principles: Inspired by Javascript, the aim is to design languages that a
 ### A key overview
 A **key** sum up about the difference. 
 - Influx 1.8 doesn't support UI. We have to configure ourselves. While, influx 2.5 supports UI, and intergrade as a whole project.
-- Influx 1.8 only supports partial flux grammar, mainly using SQL-like query language. Influx 2.5 is mainly using flux query language but supports some SQL-like queries.
+- Influx 1.8 only supports partial Flux grammar, mainly using SQL-like query language. Influx 2.5 is mainly using Flux query language but supports some SQL-like queries.
+> Flux is packaged with InfluxDB v1.8+ and does not require any additional installation, however it is disabled by default and [needs to be enabled](https://docs.influxdata.com/influxdb/v1.8/flux/installation/) </br>
 > [Check at](https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/#influxql-support)
-- To support SQL in influxdb, we have to map from database/ retention policies to organization/bucket. [Please see](https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/dbrp/#create-dbrp-mappings)
+- To support SQL in influxdb, we have to map from database/ retention policies to organization/bucket. 
+>[Please see](https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/dbrp/#create-dbrp-mappings)
 - File system layout differents:
 - InfluxDB OSS 2.0 replaces 1.x continuous queries (CQs) with InfluxDB tasks. To migrate continuous queries to InfluxDB 2.0 tasks. [Do the following](https://docs.influxdata.com/influxdb/v2.5/upgrade/v1-to-v2/migrate-cqs/)
 - File copy method (/var/lib/influxdb) : Same as V1, takes effect when the service is restarted.
 
-> **Compared to V1** : (1) it uses IDs at the file level to distinguish specific storage buckets (2) it cannot replace data files during insertion, and even if it does, it will fail. However, it will not report an error if its data file is deleted after successful startu
+> **Compared to V1** : (1) it uses IDs at the file level to distinguish specific storage buckets (2) it cannot replace data files during insertion, and even if it does, it will fail. However, it will not report an error if its data file is deleted after successful start. </br>
 > **Conclusion**: (1) You can use the official command provided for cold backup, token configuration is required before backup on the server (2) File copy is possible, but you must restart the service, otherwise the data will be inaccurate.
 
 ### New to V2
@@ -54,9 +56,10 @@ New concepts.
 | Maintenance    |           - [x]            |                             - [x]                              |
 | Database name  |          database          | Bucket <br/>(combination of a database and a retention policy) |
 | Query Language | Flux & InfluxQL (partcial) |                        Flux & InfluxQL                         |
+| Flux version | Needs action |                        Flux: 0.188.1                        |
 | UI             |           - [ ]            |                             - [x]                              |
 
-
+Upgrade to 
 ### Something may be good to know, abstract from release notes
 - $INFLUX_TOKEN
 - This release includes a breaking change to the format in which Time-Structured Merge Tree (TSM) and index data are stored on disk. Existing local data will not be queryable after upgrading to this release.
