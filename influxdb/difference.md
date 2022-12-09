@@ -13,8 +13,15 @@ TICK
 
 ![TICK](https://static.geekbang.org/infoq/5c4941cb69e59.png?imageView2/0/w/800)
 
+## 3. Flux
+Flux is InfluxData's functional data scripting language designed to query, analyze, and manipulate data, and it is a replacement for InfluxQL and other SQL-like query languages.
 
-## Comparication
+Design principles: Inspired by Javascript, the aim is to design languages that are usable, readable, flexible, composable, testable, contributable and sharable.
+> [Flux syntax basics](https://docs.influxdata.com/flux/v0.x/get-started/syntax-basics/)
+> [Flux standard library](https://docs.influxdata.com/flux/v0.x/stdlib/)
+
+
+## 4. Comparication
 
 ### A key overview
 A **key** sum up about the difference. 
@@ -23,12 +30,11 @@ A **key** sum up about the difference.
 > [Check at](https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/#influxql-support)
 - To support SQL in influxdb, we have to map from database/ retention policies to organization/bucket. [Please see](https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/dbrp/#create-dbrp-mappings)
 - File system layout differents:
-- InfluxDB OSS 2.0 replaces 1.x continuous queries (CQs) with InfluxDB tasks. To migrate continuous queries to InfluxDB 2.0 tasks. [Do the following](https://docs.influxdata.com/influxdb/v2.0/upgrade/v1-to-v2/migrate-cqs/)
+- InfluxDB OSS 2.0 replaces 1.x continuous queries (CQs) with InfluxDB tasks. To migrate continuous queries to InfluxDB 2.0 tasks. [Do the following](https://docs.influxdata.com/influxdb/v2.5/upgrade/v1-to-v2/migrate-cqs/)
 - File copy method (/var/lib/influxdb) : Same as V1, takes effect when the service is restarted.
 
-> - **Compared to V1** : (1) it uses IDs at the file level to distinguish specific storage buckets (2) it cannot replace data files during insertion, and even if it does, it will fail. However, it will not report an error if its data file is deleted after successful startup
-
-> - **Conclusion**: (1) You can use the official command provided for cold backup, token configuration is required before backup on the server (2) File copy is possible, but you must restart the service, otherwise the data will be inaccurate.
+> **Compared to V1** : (1) it uses IDs at the file level to distinguish specific storage buckets (2) it cannot replace data files during insertion, and even if it does, it will fail. However, it will not report an error if its data file is deleted after successful startu
+> **Conclusion**: (1) You can use the official command provided for cold backup, token configuration is required before backup on the server (2) File copy is possible, but you must restart the service, otherwise the data will be inaccurate.
 
 ### New to V2
 
