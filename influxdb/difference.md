@@ -17,7 +17,7 @@ TICK stands for Telegraf, InfluxDB, Chronograf, and Kapacitor
 Flux is InfluxData's functional data scripting language designed to query, analyze, and manipulate data, and it is a replacement for InfluxQL and other SQL-like query languages.
 
 Design principles: Inspired by Javascript, the aim is to design languages that are usable, readable, flexible, composable, testable, contributable and sharable.
-> [Flux syntax basics](https://docs.influxdata.com/flux/v0.x/get-started/syntax-basics/)
+> [Flux syntax basics](https://docs.influxdata.com/flux/v0.x/get-started/syntax-basics/) </br>
 > [Flux standard library](https://docs.influxdata.com/flux/v0.x/stdlib/)
 
 
