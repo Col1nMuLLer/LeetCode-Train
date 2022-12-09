@@ -10,13 +10,8 @@ InfluxDB v2.5 is the latest stable version influxData released.
 TICK is the set of components that make up the InfluxData platform, representing the four components used to solve the chronological database problem: Telegraf (data collector), InfluxDB (chronological database), Chronograf (visualization UI) and Kapacitor (processing and monitoring service)
 
 TICK
-![TICK](image https://static.geekbang.org/infoq/5c4941cb69e59.png?imageView2/0/w/800)
 
-
-
-
-
-
+![TICK](https://static.geekbang.org/infoq/5c4941cb69e59.png?imageView2/0/w/800)
 
 
 ## Comparication
@@ -33,7 +28,7 @@ A **key** sum up about the difference.
 
 > - Compared to V1 : (1) it uses IDs at the file level to distinguish specific storage buckets (2) it cannot replace data files during insertion, and even if it does, it will fail. However, it will not report an error if its data file is deleted after successful startup
 
-- Conclusion: (1) You can use the official command provided for cold backup, token configuration is required before backup on the server (2) File copy is possible, but you must restart the service, otherwise the data will be inaccurate.
+> - Conclusion: (1) You can use the official command provided for cold backup, token configuration is required before backup on the server (2) File copy is possible, but you must restart the service, otherwise the data will be inaccurate.
 
 ### New to V2
 
@@ -56,7 +51,7 @@ New concepts.
 | UI             |           - [ ]            |                             - [x]                              |
 
 
-### 
+### Something may be good to know, abstract from release notes
 - $INFLUX_TOKEN
 - This release includes a breaking change to the format in which Time-Structured Merge Tree (TSM) and index data are stored on disk. Existing local data will not be queryable after upgrading to this release.
 - main difference is ui
