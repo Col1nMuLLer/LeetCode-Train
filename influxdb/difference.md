@@ -17,7 +17,7 @@ TICK stands for Telegraf, InfluxDB, Chronograf, and Kapacitor
 Flux is InfluxData's functional data scripting language designed to query, analyze, and manipulate data, and it is a replacement for InfluxQL and other SQL-like query languages.
 
 Design principles: Inspired by Javascript, the aim is to design languages that are usable, readable, flexible, composable, testable, contributable and sharable.
-> [Flux syntax basics](https://docs.influxdata.com/flux/v0.x/get-started/syntax-basics/) </br>
+> [Flux syntax basics](https://docs.influxdata.com/flux/v0.x/get-started/syntax-basics/) <br/>
 > [Flux standard library](https://docs.influxdata.com/flux/v0.x/stdlib/)
 
 
@@ -30,20 +30,20 @@ A **key** sum-up of the differences:
 - Influx 1.8 doesn't support UI. We have to configure ourselves. While, influx 2.5 supports UI, and intergrade as a whole project.
 #### 4.1.2 Flux & Influxsql
 - Influx 1.8 only supports partial Flux grammar, mainly using SQL-like query language. Influx 2.5 is mainly using Flux query language but supports some SQL-like queries.
-> Flux is packaged with InfluxDB v1.8+ and does not require any additional installation, however it is disabled by default and [needs to be enabled](https://docs.influxdata.com/influxdb/v1.8/flux/installation/) </br>
+> Flux is packaged with InfluxDB v1.8+ and does not require any additional installation, however it is disabled by default and [needs to be enabled](https://docs.influxdata.com/influxdb/v1.8/flux/installation/) <br/>
 > [Influx-sql support](https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/#influxql-support)
 - To support SQL in influxdb, we have to map from database/ retention policies to organization/bucket. 
 >[Please see](https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/dbrp/#create-dbrp-mappings)
 #### 4.1.3 File system layout
 - File system layout differents:
-> [1.x Layout](https://docs.influxdata.com/influxdb/v1.8/concepts/file-system-layout/) </br>
+> [1.x Layout](https://docs.influxdata.com/influxdb/v1.8/concepts/file-system-layout/) <br/>
 > [2.5 Layout](https://docs.influxdata.com/influxdb/v2.5/reference/internals/file-system-layout/)
 #### 4.1.4 Continuous queries (CQs)
 - InfluxDB OSS 2.0 replaces 1.x continuous queries (CQs) with InfluxDB tasks. To migrate continuous queries to InfluxDB 2.0 tasks. [Do the following](https://docs.influxdata.com/influxdb/v2.5/upgrade/v1-to-v2/migrate-cqs/)
 #### 4.1.5 File copy method (Backup)
 - File copy method (/var/lib/influxdb) : Same as V1, takes effect when the service is restarted.
 
-> **Compared to V1** : (1) it uses IDs at the file level to distinguish specific storage buckets (2) it cannot replace data files during insertion, and even if it does, it will fail. However, it will not report an error if its data file is deleted after successful start. </br>
+> **Compared to V1** : (1) it uses IDs at the file level to distinguish specific storage buckets (2) it cannot replace data files during insertion, and even if it does, it will fail. However, it will not report an error if its data file is deleted after successful start. <br/>
 > **Conclusion**: (1) You can use the official command provided for cold backup, token configuration is required before backup on the server (2) File copy is possible, but you must restart the service, otherwise the data will be inaccurate.
 
 ### 4.2 New to V2
@@ -59,13 +59,13 @@ New concepts.
 ### 4.3 An Overview Table
 
 
-| An overview Table     |         Influx 1.8         |                           influx 2.5                           |
-| -------------- | :------------------------: | :------------------------------------------------------------: |
-| Maintenance    |           - [x]            |                             - [x]                              |
-| Database name  |          database          | Bucket <br/>(combination of a database and a retention policy) |
-| Query Language | Flux & InfluxQL (partcial) |                        Flux & InfluxQL                         |
-| Flux version | Needs action |                        Flux: 0.188.1                        |
-| UI             |           - [ ]            |                             - [x]                              |
+| An overview Table |         Influx 1.8         |                           influx 2.5                           |
+| ----------------- | :------------------------: | :------------------------------------------------------------: |
+| Maintenance       |           - [x]            |                             - [x]                              |
+| Database name     |          database          | Bucket <br/>(combination of a database and a retention policy) |
+| Query Language    | Flux & InfluxQL (partcial) |                        Flux & InfluxQL                         |
+| Flux version      |        Needs action        |                         Flux: 0.188.1                          |
+| UI                |           - [ ]            |                             - [x]                              |
 
 
 ### 4.4 Something may be good to know (abstract from release notes)
