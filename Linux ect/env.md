@@ -5,7 +5,7 @@ sudo apt install openjdk-17-jre
 java --version
 ```
 
-
+https://openjdk.org/install/
 node upgrade
 https://stackoverflow.com/questions/10075990/upgrading-node-js-to-latest-version
 https://stackoverflow.com/questions/57534295/npm-err-tracker-idealtree-already-exists-while-creating-the-docker-image-for/65443098#65443098
