@@ -7,30 +7,56 @@ InfluxDB 1.8 will continue to be maintained and receive defect fixes through the
 ## 2. Influx 2.5
 InfluxDB v2.5 is the latest stable version influxData released.
 
+TICK is the set of components that make up the InfluxData platform, representing the four components used to solve the chronological database problem: Telegraf (data collector), InfluxDB (chronological database), Chronograf (visualization UI) and Kapacitor (processing and monitoring service)
+
+TICK
+![TICK](image https://static.geekbang.org/infoq/5c4941cb69e59.png?imageView2/0/w/800)
+
+
+
+
+
+
+
 
 ## Comparication
 
-A key sum up about the difference. 
+### A key overview
+A **key** sum up about the difference. 
 - Influx 1.8 doesn't support UI, we have to configure by ourselves. While, influx 2.5 supports UI, intergrade as a whole project.
 - Influx 1.8 only supports partcial flux grammmar, mainly using sql-like query language. Influx 2.5 is mainly using flux query language, but supports some sql-like queries.
-- To support sql in influxdb, we have to map from database/ retention policies to orgiganization/bucket. []<https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/dbrp/#create-dbrp-mappings>
+> <https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/#influxql-support>
+- To support sql in influxdb, we have to map from database/ retention policies to orgiganization/bucket. [Please see](https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/dbrp/#create-dbrp-mappings)
 - File system layout differents:
-- 
+- InfluxDB OSS 2.0 replaces 1.x continuous queries (CQs) with InfluxDB tasks. To migrate continuous queries to InfluxDB 2.0 tasks. [Do the following](https://docs.influxdata.com/influxdb/v2.0/upgrade/v1-to-v2/migrate-cqs/)
+- File copy method (/var/lib/influxdb) : Same as V1, takes effect when the service is restarted.
 
-<https://docs.influxdata.com/influxdb/v2.5/query-data/influxql/#influxql-support>
+> - Compared to V1 : (1) it uses IDs at the file level to distinguish specific storage buckets (2) it cannot replace data files during insertion, and even if it does, it will fail. However, it will not report an error if its data file is deleted after successful startup
 
-| Heading 1      |         Influx 1.8         |                           influx 2.5                           |
+- Conclusion: (1) You can use the official command provided for cold backup, token configuration is required before backup on the server (2) File copy is possible, but you must restart the service, otherwise the data will be inaccurate.
+
+### New to V2
+
+New concepts.
+
+- bucket: All InfluxDB data is stored in a storage bucket. A bucket combines the concept of a database and a storage period (time each data point still exists for a duration). A bucket belongs to an organization
+
+- bucket schema: Storage buckets with an explicit schema-type need to specify an explicit schema for each metric. The measure contains labels, fields and timestamps. The explicit schema restricts the shape of the data that can be written to the metric.
+
+- organization: The InfluxDB organization is a workspace for a group of users. All dashboards, tasks, storage buckets, and users belong to an organization.
+
+
+
+
+| An overview Table     |         Influx 1.8         |                           influx 2.5                           |
 | -------------- | :------------------------: | :------------------------------------------------------------: |
 | Maintenance    |           - [x]            |                             - [x]                              |
 | Database name  |          database          | Bucket <br/>(combination of a database and a retention policy) |
 | Query Language | Flux & InfluxQL (partcial) |                        Flux & InfluxQL                         |
 | UI             |           - [ ]            |                             - [x]                              |
-| Maintenance    |          Cell A2           |                            Cell A3                             |
-| Maintenance    |          Cell A2           |                            Cell A3                             |
-| Maintenance    |          Cell A2           |                            Cell A3                             |
-| Maintenance    |          Cell A2           |                            Cell A3                             |
 
 
+### 
 - $INFLUX_TOKEN
 - This release includes a breaking change to the format in which Time-Structured Merge Tree (TSM) and index data are stored on disk. Existing local data will not be queryable after upgrading to this release.
 - main difference is ui
