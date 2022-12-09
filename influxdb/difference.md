@@ -7,11 +7,11 @@ InfluxDB 1.8 will continue to be maintained and receive defect fixes through the
 ## 2. Influx 2.5
 InfluxDB v2.5 is the latest stable version InfluxData released.
 
-TICK is the set of components that make up the InfluxData platform, representing the four components used to solve the chronological database problem: Telegraf (data collector), InfluxDB (chronological database), Chronograf (visualization UI), and Kapacitor (processing and monitoring service)
+TICK is the set of components that make up the InfluxData platform, representing the four components used to solve the chronological database problem: **Telegraf** (data collector), **InfluxDB** (chronological database), **Chronograf** (visualization UI), and **Kapacitor** (processing and monitoring service)
 
-TICK
+TICK stands for Telegraf, InfluxDB, Chronograf, and Kapacitor
 
-![TICK](https://static.geekbang.org/infoq/5c4941cb69e59.png?imageView2/0/w/800)
+![TICK](https://w2.influxdata.com/wp-content/uploads/Influx-1.0-Diagram_04.20.2020v2.png)
 
 ## 3. Flux
 Flux is InfluxData's functional data scripting language designed to query, analyze, and manipulate data, and it is a replacement for InfluxQL and other SQL-like query languages.
