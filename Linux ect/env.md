@@ -20,3 +20,5 @@ https://stackoverflow.com/questions/69797806/code-style-issues-found-in-the-abov
  apt-get update && apt-get install -y lsb-release && apt-get clean all
 
 https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/
+
+[Schedule a task](https://www.baeldung.com/linux/schedule-script-execution)
