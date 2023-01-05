@@ -1,8 +1,9 @@
 # !/bin/bash -x
 
 # back up yesterday data
-export DATETIME=$(date "+%Y%m%d%H%M%S")
+export DATETIME=$(date "+%Y%m%d")
 startDate=$(date "+%Y-%m-%dT00:00:00Z" -d "-1 days")
+# startDate=$(date "+%Y-%m-%dT00:00:00Z")
 # timestamp=$(date +"%s_%d-%B-%Y_%A@%H%M")
 backup_tar_file="influxdb_backup_$DATETIME.tar.gz"
 backup_tmp_file="influxdb_backup_$DATETIME"
@@ -23,7 +24,7 @@ fi
 # : ${INFLUXDB_ORG:?"INFLUXDB_ORG env variable is required"}
 # : ${INFLUXDB_TOKEN:?"INFLUXDB_TOKEN env variable is required"}
 
-export BACKUP_PATH=${BACKUP_PATH:-/var/backups/influxdb_backup/$backup_tmp_file}
+export BACKUP_PATH=${BACKUP_PATH:-$backup_tar_path$backup_tmp_file}
 export BACKUP_ARCHIVE_PATH=${BACKUP_ARCHIVE_PATH:-$backup_tar_path$backup_tar_file}
 export INFLUXDB_HOST=${INFLUXDB_HOST:-influxdb}
 export INFLUXDB_ORG=${INFLUXDB_ORG:-influx}
@@ -35,19 +36,19 @@ export AZURE_STORAGE_AUTH_MODE=${AZURE_STORAGE_AUTH_MODE:-key}
 export AZURE_ACCESS_TIER=${AZURE_ACCESS_TIER:-Cool}
 
 # replace by a sas token. has to be container sas token, not the account.
-export AZURE_STORAGE_SAS_TOKEN=${AZURE_STORAGE_SAS_TOKEN:-sp=racwdlm&st=2022-12-22T20:41:26Z&se=2022-12-23T16:41:26Z&spr=https&sv=2021-06-08&sr=c&sig=DrNzGoJNh5xMDpAyYPo0sLask35%2Bpn39Ae1s2ZoQlJE%3D}
+export AZURE_STORAGE_SAS_TOKEN=${AZURE_STORAGE_SAS_TOKEN:-sp=racwdlme&st=2023-01-04T11:55:07Z&se=2023-01-06T19:55:07Z&spr=https&sv=2021-06-08&sr=c&sig=cEXXY1LuyqhHBBk81UZ8doH%2BUWZglRSLd2F0ucNSOHk%3D}
 # export AZURE_ACCESS_KEY=${AZURE_ACCESS_KEY:-}
 
 # AZURE_STORAGE_CONNECTION_STRING: A connection string that includes the storage account key or a SAS token.
 # export AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING:-}
-export CRON=${CRON:-"* * * * *"} #for testing。 if we want to back up at mid-night everyday, the format is  0 0 * * *
+export CRON=${CRON:-"*/2 * * * *"} #for testing。 if we want to back up at mid-night everyday, the format is  0 0 * * *
 
 inputValidation() {
     # Get all the databases
     databases=$(influx -execute 'show databases' | sed -n -e '/----/,$p' | grep -v -e '----' -e '_internal')
 
-    if [[ -z ${databases} ]]; then
-        echo "no databases/measurements in current database"
+    if [ -z $1 ]; then
+        echo "Err: please input a database name"
         exit 1
     fi
 
@@ -55,15 +56,17 @@ inputValidation() {
     # IFS=$'\n'    # Change IFS to newline char
     # databasesArr=(${databases})
     # # split the `names` string into an array by the same name
-    # IFS=$SAVEIFS # Restore original IFS
+
     # databasesArr=(${databases///n/}) # split by \n to an array
     # databasesArr=(${databases//$'\n'/})
     # databasesArr=(${databases//// })
-    if [ -z $1 ]; then
-        echo "Err: please input a database name"
-        exit 1
-    fi
-
+    # databasesArr=($databases) # error: "(" unexpected (expecting "}")
+    # read -r databasesArr <<<"$databases" # error: redirection unexpected
+    # IFS=' '
+    # read -ra databasesArr <<<"$databases"
+    # IFS=$SAVEIFS # Restore original IFS
+    # declare -p $databasesArr
+    # echo $databasesArr
     # check if the database we input is in our databases
     # if [[ -n $2 ]]; then # if the user gives two parameters, <new_database_name new>
     #     if [[ $2 != "new" ]]; then
@@ -71,12 +74,16 @@ inputValidation() {
     #         exit 1
     #     fi
     #     if [[ " ${databasesArr[*]} " =~ " ${1} " ]]; then
-    #         echo "Err: please input a non-existed database name, using command - influx -execute show databases"
+    #         echo "Err: please input a non-existed database name, using command - influx -execute show databases, with double quotes <show databases>"
     #         exit 1
     #     fi
     # else
-    #     if [[ ! " ${databasesArr[*]} " =~ " ${1} " ]]; then
-    #         echo "Err: please input a valid database name, using command - influx -execute show databases"
+    #     if [[ -z ${databases} ]]; then
+    #         echo "no databases/measurements in current database"
+    #         exit 1
+    #     fi
+    #     if [[ ! "${databasesArr[*]}" =~ "${1}" ]]; then
+    #         echo "Err: please input a valid database name, using command - influx -execute show databases, with double quotes <show databases>"
     #         exit 1
     #     fi
     # fi
@@ -110,19 +117,21 @@ startcron() {
     # shoule be "$1 . $HOME/.profile; $0 backup $db >> /var/log/cron.log 2>&1" However, it will pop out an error with ./var/backups/influxdb_backup/influx_bc.sh: not found
     # it could be resolved by deleting the first dot '.'
 
-    echo "$1 . $HOME/.profile;  /var/backups/influxdb_backup/influx_bc.sh backup $db >> /var/log/cron.log 2>&1" >/etc/cron.d/influxdbbackup
-    cat /etc/cron.d/influxdbbackup
-    crontab /etc/cron.d/influxdbbackup
-    touch /var/log/cron.log
-    crontab && tail -f /var/log/cron.log
+    # echo "$1 . $HOME/.profile;  /var/backups/influxdb_backup/influx_bc.sh backup $db >> /var/log/cron.log 2>&1" >/etc/cron.d/influxdbbackup
+    # cat /etc/cron.d/influxdbbackup
+    # crontab /etc/cron.d/influxdbbackup
+    # touch /var/log/cron.log
+    # crontab && tail -f /var/log/cron.log
 }
 
 backup() {
-    echo $1 >>/test.txt
-    # echo $1    # the value for line 202
-    # echo "222" #>>/test.txt
+    # parameters used in this function
+    #  $1  ->  # the value for line 202
+
     # the database name input in the function startcron
-    echo "Backing up to $BACKUP_PATH"
+    inputValidation $1
+    # echo $1$DATETIME >>/test.txt
+    # echo "Backing up to $BACKUP_PATH"
 
     if [ -d $BACKUP_PATH ]; then
         rm -rf $BACKUP_PATH
@@ -130,7 +139,8 @@ backup() {
     mkdir -p $BACKUP_PATH
 
     # back up command
-    influxd backup -portable -db $1 -start $startDate $BACKUP_PATH
+    # influxd backup -portable -db $1 -start $startDate $BACKUP_PATH
+    influxd backup -portable -db $1 $BACKUP_PATH
 
     if [ $? -ne 0 ]; then
         echo "Failed to backup to $BACKUP_PATH/"
@@ -143,7 +153,7 @@ backup() {
 
     # Create archive
     echo $(date +"%d-%B-%Y@%H:%M:%S")" - Creating archive $BACKUP_PATH/$backup_tmp_file."
-    tar -cvzf $BACKUP_ARCHIVE_PATH $BACKUP_PATH
+    tar cvzf $BACKUP_ARCHIVE_PATH $BACKUP_PATH
     rm -rf $BACKUP_PATH
     echo "Sending file to azure cloud"
 
@@ -186,7 +196,8 @@ restore() {
         exit 1
     fi
     mkdir -p $BACKUP_PATH
-    tar -xvzf $BACKUP_ARCHIVE_PATH #-C $BACKUP_PATH
+    # tar -xzf $BACKUP_ARCHIVE_PATH #-C $BACKUP_PATH
+    tar -cvzf $BACKUP_ARCHIVE_PATH $BACKUP_PATH
 
     echo "Running restore"
     if influxd restore -portable -db $oldDB -newdb ${newDB%% *} $BACKUP_PATH; then
