@@ -5,11 +5,10 @@ export DATETIME=$(date "+%Y%m%d")
 startDate=$(date "+%Y-%m-%dT00:00:00Z" -d "-1 days")
 # startDate=$(date "+%Y-%m-%dT00:00:00Z")
 # timestamp=$(date +"%s_%d-%B-%Y_%A@%H%M")
-backup_tar_file="influxdb_backup_$DATETIME.tar.gz"
-backup_tmp_file="influxdb_backup_$DATETIME"
-# backup_tar_file="influxdb_backup.tar.gz"
-# backup_tmp_file="influxdb_backup"
-backup_tar_path="/var/backups/influxdb_backup/"
+backup_tar_file="_backup_$DATETIME.tar.gz" # will be like <databaseName>__backup_$DATETIME.tar.gz finally
+backup_tmp_file="_backup_$DATETIME"        # a folder for storage backup files, delete once finished
+
+backup_tar_path="/path/to/influxdb_backup/"
 
 # azure config
 if ! az --version >>/dev/null 2>&1; then
@@ -24,141 +23,93 @@ fi
 # : ${INFLUXDB_ORG:?"INFLUXDB_ORG env variable is required"}
 # : ${INFLUXDB_TOKEN:?"INFLUXDB_TOKEN env variable is required"}
 
-export BACKUP_PATH=${BACKUP_PATH:-$backup_tar_path$backup_tmp_file}
-export BACKUP_ARCHIVE_PATH=${BACKUP_ARCHIVE_PATH:-$backup_tar_path$backup_tar_file}
+export BACKUP_PATH=${BACKUP_PATH:-$backup_tar_path}
+export BACKUP_ARCHIVE_PATH=${BACKUP_ARCHIVE_PATH:-$backup_tar_path}
 export INFLUXDB_HOST=${INFLUXDB_HOST:-influxdb}
 export INFLUXDB_ORG=${INFLUXDB_ORG:-influx}
 export INFLUXDB_BACKUP_PORT=${INFLUXDB_BACKUP_PORT:-8086}
-export AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME:-mingst01}
-export AZURE_CONTAINER_NAME=${AZURE_CONTAINER_NAME:-influxdb-bc}
+export AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME:-<storage-account-name>}
+export AZURE_CONTAINER_NAME=${AZURE_CONTAINER_NAME:-<container-name>}
 export AZURE_FILE_NAME=${AZURE_FILE_NAME:-${backup_tar_file}}
-export AZURE_STORAGE_AUTH_MODE=${AZURE_STORAGE_AUTH_MODE:-key}
-export AZURE_ACCESS_TIER=${AZURE_ACCESS_TIER:-Cool}
+export AZURE_STORAGE_AUTH_MODE=${AZURE_STORAGE_AUTH_MODE:-key} # <option login|key>
+export AZURE_ACCESS_TIER=${AZURE_ACCESS_TIER:-Cool}            # <option Hot|Cool|Archive>
 
 # replace by a sas token. has to be container sas token, not the account.
-export AZURE_STORAGE_SAS_TOKEN=${AZURE_STORAGE_SAS_TOKEN:-sp=racwdlme&st=2023-01-04T11:55:07Z&se=2023-01-06T19:55:07Z&spr=https&sv=2021-06-08&sr=c&sig=cEXXY1LuyqhHBBk81UZ8doH%2BUWZglRSLd2F0ucNSOHk%3D}
+export AZURE_STORAGE_SAS_TOKEN=${AZURE_STORAGE_SAS_TOKEN:-<sas-token>}
 # export AZURE_ACCESS_KEY=${AZURE_ACCESS_KEY:-}
 
 # AZURE_STORAGE_CONNECTION_STRING: A connection string that includes the storage account key or a SAS token.
 # export AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING:-}
 export CRON=${CRON:-"*/2 * * * *"} #for testing。 if we want to back up at mid-night everyday, the format is  0 0 * * *
 
-inputValidation() {
-    # Get all the databases
-    databases=$(influx -execute 'show databases' | sed -n -e '/----/,$p' | grep -v -e '----' -e '_internal')
-
-    if [ -z $1 ]; then
-        echo "Err: please input a database name"
-        exit 1
-    fi
-
-    # SAVEIFS=$IFS # Save current IFS (Internal Field Separator)
-    # IFS=$'\n'    # Change IFS to newline char
-    # databasesArr=(${databases})
-    # # split the `names` string into an array by the same name
-
-    # databasesArr=(${databases///n/}) # split by \n to an array
-    # databasesArr=(${databases//$'\n'/})
-    # databasesArr=(${databases//// })
-    # databasesArr=($databases) # error: "(" unexpected (expecting "}")
-    # read -r databasesArr <<<"$databases" # error: redirection unexpected
-    # IFS=' '
-    # read -ra databasesArr <<<"$databases"
-    # IFS=$SAVEIFS # Restore original IFS
-    # declare -p $databasesArr
-    # echo $databasesArr
-    # check if the database we input is in our databases
-    # if [[ -n $2 ]]; then # if the user gives two parameters, <new_database_name new>
-    #     if [[ $2 != "new" ]]; then
-    #         echo "wrong parameters"
-    #         exit 1
-    #     fi
-    #     if [[ " ${databasesArr[*]} " =~ " ${1} " ]]; then
-    #         echo "Err: please input a non-existed database name, using command - influx -execute show databases, with double quotes <show databases>"
-    #         exit 1
-    #     fi
-    # else
-    #     if [[ -z ${databases} ]]; then
-    #         echo "no databases/measurements in current database"
-    #         exit 1
-    #     fi
-    #     if [[ ! "${databasesArr[*]}" =~ "${1}" ]]; then
-    #         echo "Err: please input a valid database name, using command - influx -execute show databases, with double quotes <show databases>"
-    #         exit 1
-    #     fi
-    # fi
-
-}
-
 startcron() {
-    if ! service cron status; then
+    if ! service cron status >>/dev/null 2>&1; then
         service cron start
     fi
 
-    read -p 'database name: ' db
+    db=$2
+    backup_tar_file=$db$backup_tar_file
+    backup_tmp_file=$db$backup_tmp_file
 
-    inputValidation $db
-
-    # echo "export PATH=$PATH:user/local/bin/influx" >>$HOME/.profile
-    # echo "export INFLUXDB_HOST=$INFLUXDB_HOST" >>$HOME/.profile
-    # echo "export INFLUXDB_TOKEN=$INFLUXDB_TOKEN" >>$HOME/.profile
-    # echo "export INFLUXDB_ORG=$INFLUXDB_ORG" >>$HOME/.profile
-    # echo "export INFLUXDB_BACKUP_PORT=$INFLUXDB_BACKUP_PORT" >>$HOME/.profile
-    # echo "export BACKUP_PATH=$BACKUP_PATH" >>$HOME/.profile
-    # echo "export BACKUP_ARCHIVE_PATH=$BACKUP_ARCHIVE_PATH" >>$HOME/.profile
-    # echo "export DATETIME=$DATETIME" >>$HOME/.profile
-    # echo "export AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT" >>$HOME/.profile
-    # #echo "export AZURE_STORAGE_KEY=$AZURE_STORAGE_KEY" >>$HOME/.profile
-    # echo "export AZURE_STORAGE_SAS_TOKEN=$AZURE_STORAGE_SAS_TOKEN" >>$HOME/.profile
-    # echo "export AZURE_STORAGE_AUTH_MODE=$AZURE_STORAGE_AUTH_MODE" >>$HOME/.profile
-    # echo "Starting backup cron job with frequency '$1'" #default scheduler
-    # echo "Please input databases you want to backup"
+    echo "export PATH=$PATH:user/local/bin/influx" >>$HOME/.profile
+    echo "export INFLUXDB_HOST=$INFLUXDB_HOST" >>$HOME/.profile
+    echo "export INFLUXDB_TOKEN=$INFLUXDB_TOKEN" >>$HOME/.profile
+    echo "export INFLUXDB_ORG=$INFLUXDB_ORG" >>$HOME/.profile
+    echo "export INFLUXDB_BACKUP_PORT=$INFLUXDB_BACKUP_PORT" >>$HOME/.profile
+    echo "export BACKUP_PATH=$BACKUP_PATH" >>$HOME/.profile
+    echo "export BACKUP_ARCHIVE_PATH=$BACKUP_ARCHIVE_PATH" >>$HOME/.profile
+    echo "export DATETIME=$DATETIME" >>$HOME/.profile
+    echo "export AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT" >>$HOME/.profile
+    #echo "export AZURE_STORAGE_KEY=$AZURE_STORAGE_KEY" >>$HOME/.profile
+    echo "export AZURE_STORAGE_SAS_TOKEN=$AZURE_STORAGE_SAS_TOKEN" >>$HOME/.profile
+    echo "export AZURE_STORAGE_AUTH_MODE=$AZURE_STORAGE_AUTH_MODE" >>$HOME/.profile
+    echo "Starting backup cron job with frequency '$1'" #default scheduler
+    echo "Please input databases you want to backup"
 
     # shoule be "$1 . $HOME/.profile; $0 backup $db >> /var/log/cron.log 2>&1" However, it will pop out an error with ./var/backups/influxdb_backup/influx_bc.sh: not found
     # it could be resolved by deleting the first dot '.'
 
-    # echo "$1 . $HOME/.profile;  /var/backups/influxdb_backup/influx_bc.sh backup $db >> /var/log/cron.log 2>&1" >/etc/cron.d/influxdbbackup
-    # cat /etc/cron.d/influxdbbackup
-    # crontab /etc/cron.d/influxdbbackup
-    # touch /var/log/cron.log
-    # crontab && tail -f /var/log/cron.log
+    echo "$1 . $HOME/.profile;  ./influx_bc.sh backup $db >> /var/log/cron.log 2>&1" >/etc/cron.d/influxdbbackup
+    cat /etc/cron.d/influxdbbackup
+    crontab /etc/cron.d/influxdbbackup
+    touch /var/log/cron.log
+    crontab && tail -f /var/log/cron.log
 }
 
 backup() {
     # parameters used in this function
-    #  $1  ->  # the value for line 202
+    #  $1  ->  # the value for line 173
+    db=$1
+    echo "Backing up to $BACKUP_PATH"
+    backup_tar_file=$db$backup_tar_file
+    backup_tmp_file=$db$backup_tmp_file
 
-    # the database name input in the function startcron
-    inputValidation $1
-    # echo $1$DATETIME >>/test.txt
-    # echo "Backing up to $BACKUP_PATH"
-
-    if [ -d $BACKUP_PATH ]; then
-        rm -rf $BACKUP_PATH
+    if [ -d $BACKUP_PATH$backup_tmp_file ]; then
+        rm -rf $BACKUP_PATH$backup_tmp_file
     fi
-    mkdir -p $BACKUP_PATH
+    mkdir -p $BACKUP_PATH$backup_tmp_file
 
     # back up command
-    # influxd backup -portable -db $1 -start $startDate $BACKUP_PATH
-    influxd backup -portable -db $1 $BACKUP_PATH
+    influxd backup -portable -db $db -start $startDate $BACKUP_PATH$backup_tmp_file
+    # # influxd backup -portable -db $1 $BACKUP_PATH$backup_tmp_file
 
     if [ $? -ne 0 ]; then
-        echo "Failed to backup to $BACKUP_PATH/"
+        echo "Failed to backup to $BACKUP_PATH/$backup_tmp_file"
         exit 1
     fi
 
-    if [ -e $BACKUP_ARCHIVE_PATH ]; then
-        rm -rf $BACKUP_ARCHIVE_PATH
+    if [ -e $BACKUP_ARCHIVE_PATH$backup_tar_file ]; then
+        rm -rf $BACKUP_ARCHIVE_PATH$backup_tar_file
     fi
 
     # Create archive
-    echo $(date +"%d-%B-%Y@%H:%M:%S")" - Creating archive $BACKUP_PATH/$backup_tmp_file."
-    tar cvzf $BACKUP_ARCHIVE_PATH $BACKUP_PATH
-    rm -rf $BACKUP_PATH
+    echo $(date +"%d-%B-%Y@%H:%M:%S")" - Creating archive $BACKUP_PATH$backup_tar_file."
+    tar -cvzf $BACKUP_ARCHIVE_PATH$backup_tar_file -C$BACKUP_PATH $backup_tmp_file # tar files but ignoring the dirctionary
+    rm -rf $BACKUP_PATH$backup_tmp_file
     echo "Sending file to azure cloud"
 
     # upload to blob
-    if az storage blob upload --account-name $AZURE_ACCOUNT_NAME --container-name $AZURE_CONTAINER_NAME --name $AZURE_FILE_NAME --file $BACKUP_ARCHIVE_PATH --tier $AZURE_ACCESS_TIER --sas-token $AZURE_STORAGE_SAS_TOKEN --auth-mode $AZURE_STORAGE_AUTH_MODE; then
+    if az storage blob upload --account-name $AZURE_ACCOUNT_NAME --container-name $AZURE_CONTAINER_NAME --name $backup_tar_file --file $BACKUP_ARCHIVE_PATH$backup_tar_file --tier $AZURE_ACCESS_TIER --sas-token $AZURE_STORAGE_SAS_TOKEN --auth-mode $AZURE_STORAGE_AUTH_MODE --overwrite; then
         echo "Backup file copied to azure"
     else
         echo "Backup file failed to upload"
@@ -170,37 +121,42 @@ backup() {
 
 restore() {
 
-    echo "input a database name that is backuped"
-    read -p 'database name: ' oldDB
-    inputValidation $oldDB
+    # echo "input a database name that is backuped"
+    # read -p 'database name: ' oldDB
+    # inputValidation $oldDB
 
-    echo "input a database name that isn't exist"
-    read -p 'NEW database name using format <new_database_name new>: ' newDB
-    inputValidation $newDB
-    # newDBName=${newDB%% *}
-    # echo ${newDBName}
-    if [ -d $BACKUP_PATH ]; then
+    # echo "input a database name that isn't exist"
+    # read -p 'NEW database name using format <new_database_name new>: ' newDB
+    # inputValidation $newDB
+
+    oldDB=$1
+    newDB=$2
+
+    backup_tar_file=$oldDB$backup_tar_file
+    backup_tmp_file=$oldDB$backup_tmp_file
+
+    if [ -d $BACKUP_PATH$backup_tmp_file ]; then
         echo "Removing out of date backup"
-        rm -rf $BACKUP_PATH
+        rm -rf $BACKUP_PATH$backup_tmp_file
     fi
-    if [ -e $BACKUP_ARCHIVE_PATH ]; then
+    if [ -e $BACKUP_ARCHIVE_PATH$backup_tar_file ]; then
         echo "Removing out of date backup"
-        rm -rf $BACKUP_ARCHIVE_PATH
+        rm -rf $BACKUP_ARCHIVE_PATH$backup_tar_file
     fi
 
     echo "Downloading latest backup from azure"
-    if az storage blob download --account-name $AZURE_ACCOUNT_NAME --container-name $AZURE_CONTAINER_NAME --name $backup_tar_file --file $BACKUP_ARCHIVE_PATH --sas-token $AZURE_STORAGE_SAS_TOKEN --auth-mode $AZURE_STORAGE_AUTH_MODE; then
+    if az storage blob download --account-name $AZURE_ACCOUNT_NAME --container-name $AZURE_CONTAINER_NAME --name $backup_tar_file --file $BACKUP_ARCHIVE_PATH$backup_tar_file --sas-token $AZURE_STORAGE_SAS_TOKEN --auth-mode $AZURE_STORAGE_AUTH_MODE; then
         echo "Downloaded"
     else
         echo "Failed to download latest backup"
         exit 1
     fi
-    mkdir -p $BACKUP_PATH
+    mkdir -p $BACKUP_PATH$backup_tmp_file
     # tar -xzf $BACKUP_ARCHIVE_PATH #-C $BACKUP_PATH
-    tar -cvzf $BACKUP_ARCHIVE_PATH $BACKUP_PATH
+    tar -xvzf $BACKUP_ARCHIVE_PATH$backup_tar_file -C $BACKUP_PATH
 
     echo "Running restore"
-    if influxd restore -portable -db $oldDB -newdb ${newDB%% *} $BACKUP_PATH; then
+    if influxd restore -portable -db $oldDB -newdb $newDB $BACKUP_PATH$backup_tmp_file; then
         echo "Successfully restored"
     else
         echo "Restore failed"
@@ -211,13 +167,13 @@ restore() {
 
 case "$1" in
 "startcron")
-    startcron "$CRON"
+    startcron "$CRON" $2
     ;;
 "backup")
     backup $2
     ;;
 "restore")
-    restore
+    restore $2 $3
     ;;
 *)
     echo "Invalid command '$@'"
