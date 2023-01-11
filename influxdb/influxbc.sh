@@ -1,14 +1,6 @@
-# !/bin/bash -x
+# !/bin/dash -x
 
 # back up yesterday data
-export DATETIME=$(date "+%Y%m%d")
-startDate=$(date "+%Y-%m-%dT00:00:00Z" -d "-1 days")
-# startDate=$(date "+%Y-%m-%dT00:00:00Z")
-# timestamp=$(date +"%s_%d-%B-%Y_%A@%H%M")
-backup_tar_file="_backup_$DATETIME.tar.gz" # will be like <databaseName>__backup_$DATETIME.tar.gz finally
-backup_tmp_file="_backup_$DATETIME"        # a folder for storage backup files, delete once finished
-
-backup_tar_path="/path/to/influxdb_backup/"
 
 # azure config
 if ! az --version >>/dev/null 2>&1; then
@@ -23,24 +15,34 @@ fi
 # : ${INFLUXDB_ORG:?"INFLUXDB_ORG env variable is required"}
 # : ${INFLUXDB_TOKEN:?"INFLUXDB_TOKEN env variable is required"}
 
+# read var config
+if [ -f backup_var.conf ]; then
+    source backup_var.conf
+else
+    echo "backup_var.conf not found"
+    exit 1
+fi
+
+export DATETIME=$DATETIME
+startDate=$startDate
 export BACKUP_PATH=${BACKUP_PATH:-$backup_tar_path}
 export BACKUP_ARCHIVE_PATH=${BACKUP_ARCHIVE_PATH:-$backup_tar_path}
-export INFLUXDB_HOST=${INFLUXDB_HOST:-influxdb}
-export INFLUXDB_ORG=${INFLUXDB_ORG:-influx}
-export INFLUXDB_BACKUP_PORT=${INFLUXDB_BACKUP_PORT:-8086}
-export AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME:-<storage-account-name>}
-export AZURE_CONTAINER_NAME=${AZURE_CONTAINER_NAME:-<container-name>}
+export INFLUXDB_HOST=${INFLUXDB_HOST:-$influxdb_host}
+export INFLUXDB_ORG=${INFLUXDB_ORG:-$influxdb_org}
+export INFLUXDB_BACKUP_PORT=${INFLUXDB_BACKUP_PORT:-$influxdb_backup_port}
+export AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME:-$azure_account_name}
+export AZURE_CONTAINER_NAME=${AZURE_CONTAINER_NAME:-$azure_container_name}
 export AZURE_FILE_NAME=${AZURE_FILE_NAME:-${backup_tar_file}}
-export AZURE_STORAGE_AUTH_MODE=${AZURE_STORAGE_AUTH_MODE:-key} # <option login|key>
-export AZURE_ACCESS_TIER=${AZURE_ACCESS_TIER:-Cool}            # <option Hot|Cool|Archive>
+export AZURE_STORAGE_AUTH_MODE=${AZURE_STORAGE_AUTH_MODE:-$azure_storage_auth_mode} # <option login|key>
+export AZURE_ACCESS_TIER=${AZURE_ACCESS_TIER:-$azure_access_tier}                   # <option Hot|Cool|Archive>
 
 # replace by a sas token. has to be container sas token, not the account.
-export AZURE_STORAGE_SAS_TOKEN=${AZURE_STORAGE_SAS_TOKEN:-<sas-token>}
+export AZURE_STORAGE_SAS_TOKEN=${AZURE_STORAGE_SAS_TOKEN:-$azure_storage_sas_token}
 # export AZURE_ACCESS_KEY=${AZURE_ACCESS_KEY:-}
 
 # AZURE_STORAGE_CONNECTION_STRING: A connection string that includes the storage account key or a SAS token.
 # export AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING:-}
-export CRON=${CRON:-"*/2 * * * *"} #for testing。 if we want to back up at mid-night everyday, the format is  0 0 * * *
+export CRON=${CRON:-$cron} #for testing。 if we want to back up at mid-night everyday, the format is  0 0 * * *
 
 startcron() {
     if ! service cron status >>/dev/null 2>&1; then
@@ -51,20 +53,20 @@ startcron() {
     backup_tar_file=$db$backup_tar_file
     backup_tmp_file=$db$backup_tmp_file
 
-    echo "export PATH=$PATH:user/local/bin/influx" >>$HOME/.profile
-    echo "export INFLUXDB_HOST=$INFLUXDB_HOST" >>$HOME/.profile
-    echo "export INFLUXDB_TOKEN=$INFLUXDB_TOKEN" >>$HOME/.profile
-    echo "export INFLUXDB_ORG=$INFLUXDB_ORG" >>$HOME/.profile
-    echo "export INFLUXDB_BACKUP_PORT=$INFLUXDB_BACKUP_PORT" >>$HOME/.profile
-    echo "export BACKUP_PATH=$BACKUP_PATH" >>$HOME/.profile
-    echo "export BACKUP_ARCHIVE_PATH=$BACKUP_ARCHIVE_PATH" >>$HOME/.profile
-    echo "export DATETIME=$DATETIME" >>$HOME/.profile
-    echo "export AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT" >>$HOME/.profile
-    #echo "export AZURE_STORAGE_KEY=$AZURE_STORAGE_KEY" >>$HOME/.profile
-    echo "export AZURE_STORAGE_SAS_TOKEN=$AZURE_STORAGE_SAS_TOKEN" >>$HOME/.profile
-    echo "export AZURE_STORAGE_AUTH_MODE=$AZURE_STORAGE_AUTH_MODE" >>$HOME/.profile
-    echo "Starting backup cron job with frequency '$1'" #default scheduler
-    echo "Please input databases you want to backup"
+    # echo "export PATH=$PATH:user/local/bin/influx" >>$HOME/.profile
+    # echo "export INFLUXDB_HOST=$INFLUXDB_HOST" >>$HOME/.profile
+    # echo "export INFLUXDB_TOKEN=$INFLUXDB_TOKEN" >>$HOME/.profile
+    # echo "export INFLUXDB_ORG=$INFLUXDB_ORG" >>$HOME/.profile
+    # echo "export INFLUXDB_BACKUP_PORT=$INFLUXDB_BACKUP_PORT" >>$HOME/.profile
+    # echo "export BACKUP_PATH=$BACKUP_PATH" >>$HOME/.profile
+    # echo "export BACKUP_ARCHIVE_PATH=$BACKUP_ARCHIVE_PATH" >>$HOME/.profile
+    # echo "export DATETIME=$DATETIME" >>$HOME/.profile
+    # echo "export AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT" >>$HOME/.profile
+    # #echo "export AZURE_STORAGE_KEY=$AZURE_STORAGE_KEY" >>$HOME/.profile
+    # echo "export AZURE_STORAGE_SAS_TOKEN=$AZURE_STORAGE_SAS_TOKEN" >>$HOME/.profile
+    # echo "export AZURE_STORAGE_AUTH_MODE=$AZURE_STORAGE_AUTH_MODE" >>$HOME/.profile
+    # echo "Starting backup cron job with frequency '$1'" #default scheduler
+    # echo "Please input databases you want to backup"
 
     # shoule be "$1 . $HOME/.profile; $0 backup $db >> /var/log/cron.log 2>&1" However, it will pop out an error with ./var/backups/influxdb_backup/influx_bc.sh: not found
     # it could be resolved by deleting the first dot '.'
@@ -80,6 +82,7 @@ backup() {
     # parameters used in this function
     #  $1  ->  # the value for line 173
     db=$1
+
     echo "Backing up to $BACKUP_PATH"
     backup_tar_file=$db$backup_tar_file
     backup_tmp_file=$db$backup_tmp_file
