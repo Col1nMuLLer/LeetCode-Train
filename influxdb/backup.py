@@ -4,10 +4,10 @@ import subprocess
 # list of functions
 functions = ["backup", "restore", "startcron"]
 
-
-with open('./back_var.conf') as f:
+# Must change to the correct backup variables configuration path
+with open('./path/to/backup_var.conf') as file:
     # Read the contents of the file into a string
-    contents = f.read()
+    contents = file.read()
 
 # Split the contents of the file by newline character
 lines = contents.split('\n')
@@ -33,24 +33,33 @@ for line in lines:
         # Remove the quotation marks around the value, if any
         value = value.strip('"')
         # add key, value to the dictionary
+
         data[key] = value
         flag_usr = True
     if "password".__eq__(key):
         value = value.strip('"')
         data[key] = value
         flag_usr = True
-    if flag_usr and flag_pas:
+    if flag_usr and flag_pas:  # for break early when got what we need
         break
 
-# Now you can access the username and password like this
-username = data['username']
-password = data['password']
+databases = {}
 
-# excute linux command though os.popen()
-databases = os.popen(
-    "influx -execute 'show databases' " + "-username " + username + " -password "+password+" | sed -n -e '/----/,$p' | grep -v -e '----' -e '_internal'").readlines()
+# Now you can access the username and password like this
+try:
+    username = data['username']
+    password = data['password']
+    # excute linux command though os.popen()
+    databases = os.popen(
+        "influx -execute 'show databases' " + "-username " + username + " -password "+password+" | sed -n -e '/----/,$p' | grep -v -e '----' -e '_internal'").readlines()
+except ValueError:
+    print("Oops!  That was no valid number.  Try again...")
+    exit()
+
+
 # databases = subprocess.call(['sh', "influx -execute 'show databases'",
 #                              '-username', username, '-password', password, " | sed -n -e '/----/,$p' | grep -v -e '----' -e '_internal'"]).readlines()
+
 # remove /n and space for each elements
 # databases -> the list of all databases in current machine
 databases = [x.strip() for x in databases if x.strip() != '']
@@ -99,6 +108,9 @@ if ("restore".__eq__(function)):
 
 
 if ("startcron".__eq__(function)):
+    if len(databases) == 0:
+        print("Err: No database in the current influxDB or authorization failed")
+        exit()
     print('Please input the database you want to backup: ')
     print('database name: ')
     db = input()
