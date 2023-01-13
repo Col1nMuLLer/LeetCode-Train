@@ -2,6 +2,13 @@
 
 # back up yesterday data
 
+if [ -f /home/ubuntu/varconf/backup_var.conf ]; then
+    source /home/ubuntu/varconf/backup_var.conf
+else
+    echo "backup_var.conf not found"
+    exit 1
+fi
+
 # azure config
 if ! az --version >>/dev/null 2>&1; then
     echo "az CLI env is required !!!"
@@ -15,15 +22,7 @@ fi
 # : ${INFLUXDB_ORG:?"INFLUXDB_ORG env variable is required"}
 # : ${INFLUXDB_TOKEN:?"INFLUXDB_TOKEN env variable is required"}
 
-# read var config
-if [ -f backup_var.conf ]; then
-    source backup_var.conf
-else
-    echo "backup_var.conf not found"
-    exit 1
-fi
-
-export DATETIME=$DATETIME
+export VAR_CONF_PATH=${VAR_CONF_PATH:-$var_conf_path}
 startDate=$startDate
 export BACKUP_PATH=${BACKUP_PATH:-$backup_tar_path}
 export BACKUP_ARCHIVE_PATH=${BACKUP_ARCHIVE_PATH:-$backup_tar_path}
@@ -53,29 +52,12 @@ startcron() {
     backup_tar_file=$db$backup_tar_file
     backup_tmp_file=$db$backup_tmp_file
 
-    # echo "export PATH=$PATH:user/local/bin/influx" >>$HOME/.profile
-    # echo "export INFLUXDB_HOST=$INFLUXDB_HOST" >>$HOME/.profile
-    # echo "export INFLUXDB_TOKEN=$INFLUXDB_TOKEN" >>$HOME/.profile
-    # echo "export INFLUXDB_ORG=$INFLUXDB_ORG" >>$HOME/.profile
-    # echo "export INFLUXDB_BACKUP_PORT=$INFLUXDB_BACKUP_PORT" >>$HOME/.profile
-    # echo "export BACKUP_PATH=$BACKUP_PATH" >>$HOME/.profile
-    # echo "export BACKUP_ARCHIVE_PATH=$BACKUP_ARCHIVE_PATH" >>$HOME/.profile
-    # echo "export DATETIME=$DATETIME" >>$HOME/.profile
-    # echo "export AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT" >>$HOME/.profile
-    # #echo "export AZURE_STORAGE_KEY=$AZURE_STORAGE_KEY" >>$HOME/.profile
-    # echo "export AZURE_STORAGE_SAS_TOKEN=$AZURE_STORAGE_SAS_TOKEN" >>$HOME/.profile
-    # echo "export AZURE_STORAGE_AUTH_MODE=$AZURE_STORAGE_AUTH_MODE" >>$HOME/.profile
-    # echo "Starting backup cron job with frequency '$1'" #default scheduler
-    # echo "Please input databases you want to backup"
-
-    # shoule be "$1 . $HOME/.profile; $0 backup $db >> /var/log/cron.log 2>&1" However, it will pop out an error with ./var/backups/influxdb_backup/influx_bc.sh: not found
-    # it could be resolved by deleting the first dot '.'
-
-    echo "$1 . $HOME/.profile;  ./influx_bc.sh backup $db >> /var/log/cron.log 2>&1" >/etc/cron.d/influxdbbackup
+    # echo "$1 . $HOME/backup_var.conf;  $HOME/influx_bc.sh backup $db >> /var/log/cron.log 2>&1" >/etc/cron.d/influxdbbackup
+    echo "$1 . $VAR_CONF_PATH;  /bin/bash -c '$HOME/influx_bc.sh backup $db'>> /var/log/cron.log 2>&1" >/etc/cron.d/influxdbbackup
     cat /etc/cron.d/influxdbbackup
     crontab /etc/cron.d/influxdbbackup
     touch /var/log/cron.log
-    crontab && tail -f /var/log/cron.log
+    crontab #&& tail -f /var/log/cron.log
 }
 
 backup() {
@@ -96,6 +78,7 @@ backup() {
     influxd backup -portable -db $db -start $startDate $BACKUP_PATH$backup_tmp_file
     # # influxd backup -portable -db $1 $BACKUP_PATH$backup_tmp_file
 
+    # remove temp file
     if [ $? -ne 0 ]; then
         echo "Failed to backup to $BACKUP_PATH/$backup_tmp_file"
         exit 1
@@ -112,13 +95,14 @@ backup() {
     echo "Sending file to azure cloud"
 
     # upload to blob
-    if az storage blob upload --account-name $AZURE_ACCOUNT_NAME --container-name $AZURE_CONTAINER_NAME --name $backup_tar_file --file $BACKUP_ARCHIVE_PATH$backup_tar_file --tier $AZURE_ACCESS_TIER --sas-token $AZURE_STORAGE_SAS_TOKEN --auth-mode $AZURE_STORAGE_AUTH_MODE --overwrite; then
+    if az storage blob upload --account-name $AZURE_ACCOUNT_NAME --container-name $AZURE_CONTAINER_NAME --name $backup_tar_file --file $BACKUP_ARCHIVE_PATH$backup_tar_file --tier $AZURE_ACCESS_TIER --sas-token $AZURE_STORAGE_SAS_TOKEN --auth-mode $AZURE_STORAGE_AUTH_MODE; then
         echo "Backup file copied to azure"
     else
         echo "Backup file failed to upload"
         exit 1
     fi
 
+    rm -f $BACKUP_ARCHIVE_PATH$backup_tar_file
     echo "Backup is finished!"
 }
 
