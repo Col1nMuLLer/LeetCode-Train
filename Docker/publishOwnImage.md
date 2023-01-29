@@ -5,8 +5,8 @@ Based on "maven" iamge
 
 #### Enviornment Installed  
 
-- [ ] nodejs
-- [ ] cdktf-cli@0.14.3
-- [ ] terraform jq
-- [ ] Python
-- [ ] checkov
+- [x] nodejs
+- [x] cdktf-cli@0.14.3
+- [x] terraform jq
+- [x] Python
+- [x] checkov
