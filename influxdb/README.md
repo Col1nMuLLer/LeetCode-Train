@@ -4,7 +4,7 @@ This repo is to achieve influx backup trait by simply running `.py` file.
 # Getting Started
 
 1.	Installation process
-- [ ] The VM shoud have azure CLI, python,and crontab
+- [x] The VM shoud have azure CLI, python,and crontab
 - [ ] Download the files, {backup.py} and {influx_bc.sh} should be in same folder  
 Or in Linux system, we use `touch` to create these file and copy paste the code accordingly.  
 - Excute `chmod 777 influx_bc.sh` to make linux shell script excutable
